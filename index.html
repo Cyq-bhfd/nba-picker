@@ -50,13 +50,14 @@ h1{text-align:center;font-size:1.3em;padding:8px 0;color:#ffd700}
 .reroll-missing{background:#9c27b0;color:#fff}
 .tier-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.8em;font-weight:bold;margin-left:8px}
 #loading{text-align:center;padding:40px;color:#888;font-size:1.1em}
+#progress{color:#ffd700;margin-top:8px;font-size:.9em}
 </style>
 </head>
 <body>
-<h1> NBA选人助手</h1>
-<div id='loading'>⏳ 数据加载中...</div>
+<h1>🏀 NBA选人助手</h1>
+<div id='loading'>⏳ 数据加载中...<div id='progress'></div></div>
 <div class='style-grid' id='styleGrid' style='display:none'></div>
-<div class='status' id='statusBar' style='display:none'><div>💰 预算: <span id='budget'>29</span>金</div><div>👥 已选: <span id='count'>0</span>/8</div></div>
+<div class='status' id='statusBar' style='display:none'><div>💰 预算: <span id='budget'>29</span>金</div><div> 已选: <span id='count'>0</span>/8</div></div>
 <div class='pos-needs' id='posNeeds' style='display:none'></div>
 <div id='rerollAdvice' style='display:none'></div>
 <input type='text' class='search-box' id='searchBox' placeholder='🔍 输入队名搜索（如：热火、湖人）' autocomplete='off' style='display:none'>
@@ -66,7 +67,8 @@ h1{text-align:center;font-size:1.3em;padding:8px 0;color:#ffd700}
 <script>
 var STYLES=['快攻','半场','防守','内线','策应','showtime','挡拆','双塔','跑轰'];
 var POSITIONS=['PG','SG','SF','PF','C'];
-var DATA=null,currentStyle=null,budget=29,selected=[],posCount={PG:0,SG:0,SF:0,PF:0,C:0};
+var DATA={picks:{},tiers:{},teams:[]},currentStyle=null,budget=29,selected=[],posCount={PG:0,SG:0,SF:0,PF:0,C:0};
+var CHUNKS=6;
 
 function init(){
   document.getElementById('loading').style.display='none';
@@ -81,7 +83,29 @@ function init(){
   updatePosNeeds();renderTeamList('');
 }
 
-function loadError(){document.getElementById('loading').textContent='✗ 数据加载失败，请刷新页面'}
+function loadError(msg){document.getElementById('loading').innerHTML='✗ '+msg+'<br><div id=progress></div>';document.getElementById('progress').textContent='点击重试';document.getElementById('progress').onclick=function(){location.reload()};document.getElementById('progress').style.cursor='pointer'}
+
+function loadChunks(){
+  var progress=document.getElementById('progress');
+  var loaded=0;
+  var promises=[];
+  for(var i=0;i<CHUNKS;i++){
+    promises.push(fetch('data'+i+'.json').then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    }).then(function(chunk){
+      loaded++;
+      progress.textContent='已加载 '+loaded+'/'+CHUNKS+'...';
+      DATA.teams=DATA.teams.concat(chunk.teams);
+      Object.keys(chunk.picks).forEach(function(t){DATA.picks[t]=chunk.picks[t]});
+      Object.keys(chunk.tiers).forEach(function(t){DATA.tiers[t]=chunk.tiers[t]});
+    }));
+  }
+  Promise.all(promises).then(function(){
+    DATA.teams.sort();
+    init();
+  }).catch(function(e){loadError('加载失败: '+e.message)});
+}
 
 function selectStyle(style,btn){currentStyle=style;var btns=document.querySelectorAll('.style-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');btn.classList.add('active');document.getElementById('playerResults').innerHTML='';document.getElementById('rerollAdvice').style.display='none'}
 
@@ -102,7 +126,7 @@ function selectTeam(teamName){
     if(!affordable)h+='<span style="color:#ff4444;font-size:.8em"> ❌超预算</span>';
     if(isTopPick)h+='<span style="color:#4caf50;font-size:.8em"> 推荐</span>';
     h+='</div><div class="player-score">'+p.score+'分</div></div>';
-    h+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="player-price">💰'+p.price+'金</span><span style="color:#aaa">能力:'+p.ability+'</span></div>';
+    h+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="player-price">'+p.price+'金</span><span style="color:#aaa">能力:'+p.ability+'</span></div>';
     h+='<div class="player-stats"><div>得分<br><span class="val">'+p.pts+'</span></div><div>篮板<br><span class="val">'+p.reb+'</span></div><div>助攻<br><span class="val">'+p.ast+'</span></div><div>抢断<br><span class="val">'+p.stl+'</span></div><div>盖帽<br><span class="val">'+p.blk+'</span></div></div>';
     if(affordable)h+='<button onclick="selectPlayer(\''+teamName+'\',\''+p.name+'\',\''+p.pos+'\','+p.price+','+p.ability+')" style="width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;background:#4caf50;color:#fff;font-size:1em;font-weight:bold;cursor:pointer">✅ 选他</button>';
     card.innerHTML=h;
@@ -137,7 +161,7 @@ document.getElementById('searchBox').addEventListener('input',function(e){var q=
 
 function resetAll(){budget=29;selected=[];posCount={PG:0,SG:0,SF:0,PF:0,C:0};document.getElementById('budget').textContent=budget;document.getElementById('count').textContent=0;updatePosNeeds();renderSelected();document.getElementById('playerResults').innerHTML='';document.getElementById('rerollAdvice').style.display='none'}
 
-fetch('data.json').then(function(r){return r.json()}).then(function(d){DATA=d;init()}).catch(loadError);
+loadChunks();
 </script>
 <div style='text-align:center;margin-top:10px'><button onclick='resetAll()' style='padding:8px 20px;border:none;border-radius:6px;background:#ff4444;color:#fff;font-size:.9em;cursor:pointer'>🔄 重新开始</button></div>
 <div style='text-align:center;color:#666;font-size:.7em;margin-top:10px'>数据: <span id='teamCount'>?</span>队 | 风格匹配为预估，实战请验证</div>
