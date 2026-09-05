@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang='zh-CN'>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title> NBA选人助手</title>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>
+<title>NBA选人助手</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,system-ui,sans-serif;background:#1a1a2e;color:#eee;min-height:100vh;padding:8px}
@@ -53,58 +53,58 @@ h1{text-align:center;font-size:1.3em;padding:8px 0;color:#ffd700}
 </style>
 </head>
 <body>
-<h1>🏀 NBA选人助手</h1>
-<div id="loading">⏳ 数据加载中...</div>
-<div class="style-grid" id="styleGrid" style="display:none"></div>
-<div class="status" id="statusBar" style="display:none"><div>💰 预算: <span id="budget">29</span>金</div><div>👥 已选: <span id="count">0</span>/8</div></div>
-<div class="pos-needs" id="posNeeds" style="display:none"></div>
-<div id="rerollAdvice" style="display:none"></div>
-<input type="text" class="search-box" id="searchBox" placeholder="🔍 输入队名搜索（如：热火、湖人）" autocomplete="off" style="display:none">
-<div class="team-list" id="teamList" style="display:none"></div>
-<div id="playerResults"></div>
-<div class="selected-section" id="selectedSection" style="display:none"><div class="selected-header">📋 已选阵容</div><div id="selectedList"></div></div>
+<h1> NBA选人助手</h1>
+<div id='loading'>⏳ 数据加载中...</div>
+<div class='style-grid' id='styleGrid' style='display:none'></div>
+<div class='status' id='statusBar' style='display:none'><div>💰 预算: <span id='budget'>29</span>金</div><div>👥 已选: <span id='count'>0</span>/8</div></div>
+<div class='pos-needs' id='posNeeds' style='display:none'></div>
+<div id='rerollAdvice' style='display:none'></div>
+<input type='text' class='search-box' id='searchBox' placeholder='🔍 输入队名搜索（如：热火、湖人）' autocomplete='off' style='display:none'>
+<div class='team-list' id='teamList' style='display:none'></div>
+<div id='playerResults'></div>
+<div class='selected-section' id='selectedSection' style='display:none'><div class='selected-header'>📋 已选阵容</div><div id='selectedList'></div></div>
 <script>
-const STYLES=["快攻","半场","防守","内线","策应","showtime","挡拆","双塔","跑轰"];
-const POSITIONS=["PG","SG","SF","PF","C"];
-let DATA=null,currentStyle=null,budget=29,selected=[],posCount={PG:0,SG:0,SF:0,PF:0,C:0};
+var STYLES=['快攻','半场','防守','内线','策应','showtime','挡拆','双塔','跑轰'];
+var POSITIONS=['PG','SG','SF','PF','C'];
+var DATA=null,currentStyle=null,budget=29,selected=[],posCount={PG:0,SG:0,SF:0,PF:0,C:0};
 
 function init(){
-  document.getElementById("loading").style.display="none";
-  document.getElementById("styleGrid").style.display="grid";
-  document.getElementById("statusBar").style.display="flex";
-  document.getElementById("posNeeds").style.display="flex";
-  document.getElementById("searchBox").style.display="block";
-  document.getElementById("teamList").style.display="block";
-  document.getElementById("teamCount").textContent=DATA.teams.length;
-  var grid=document.getElementById("styleGrid");
-  STYLES.forEach(function(s){var btn=document.createElement("div");btn.className="style-btn";btn.textContent=s==="showtime"?"Showtime":s;btn.onclick=function(){selectStyle(s,btn)};grid.appendChild(btn)});
-  updatePosNeeds();renderTeamList("");
+  document.getElementById('loading').style.display='none';
+  document.getElementById('styleGrid').style.display='grid';
+  document.getElementById('statusBar').style.display='flex';
+  document.getElementById('posNeeds').style.display='flex';
+  document.getElementById('searchBox').style.display='block';
+  document.getElementById('teamList').style.display='block';
+  document.getElementById('teamCount').textContent=DATA.teams.length;
+  var grid=document.getElementById('styleGrid');
+  STYLES.forEach(function(s){var btn=document.createElement('div');btn.className='style-btn';btn.textContent=s==='showtime'?'Showtime':s;btn.onclick=function(){selectStyle(s,btn)};grid.appendChild(btn)});
+  updatePosNeeds();renderTeamList('');
 }
 
-function loadError(){document.getElementById("loading").textContent=" 数据加载失败，请刷新页面"}
+function loadError(){document.getElementById('loading').textContent='✗ 数据加载失败，请刷新页面'}
 
-function selectStyle(style,btn){currentStyle=style;var btns=document.querySelectorAll(".style-btn");for(var i=0;i<btns.length;i++)btns[i].classList.remove("active");btn.classList.add("active");document.getElementById("playerResults").innerHTML="";document.getElementById("rerollAdvice").style.display="none"}
+function selectStyle(style,btn){currentStyle=style;var btns=document.querySelectorAll('.style-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');btn.classList.add('active');document.getElementById('playerResults').innerHTML='';document.getElementById('rerollAdvice').style.display='none'}
 
 function selectTeam(teamName){
-  if(!currentStyle){alert("请先选择教练风格！");return}
+  if(!currentStyle){alert('请先选择教练风格！');return}
   var picks=DATA.picks[teamName];
-  if(!picks){showRerollAdvice("missing"," \""\u0022+teamName+"\""\u0022 不在数据库，建议刷掉！");document.getElementById("playerResults").innerHTML="";return}
+  if(!picks){showRerollAdvice('missing','「'+teamName+'」不在数据库，建议刷掉！');document.getElementById('playerResults').innerHTML='';return}
   var tier=DATA.tiers[teamName],players=picks[currentStyle]||[];
   var advice=getRerollAdvice(tier);
-  if(advice)showRerollAdvice(advice.type,advice.text);else document.getElementById("rerollAdvice").style.display="none";
-  var container=document.getElementById("playerResults");
-  container.innerHTML="<div style=\"margin:8px 0;color:#ffd700;font-weight:bold\">"+teamName+" <span class=\"tier-badge "+getTierClass(tier.ability)+"\">"+tier.ability+"能力</span></div>";
+  if(advice)showRerollAdvice(advice.type,advice.text);else document.getElementById('rerollAdvice').style.display='none';
+  var container=document.getElementById('playerResults');
+  container.innerHTML='<div style="margin:8px 0;color:#ffd700;font-weight:bold">'+teamName+' <span class="tier-badge '+getTierClass(tier.ability)+'">'+tier.ability+'能力</span></div>';
   for(var i=0;i<players.length;i++){
     var p=players[i],affordable=p.price<=budget,isTopPick=i===0&&affordable,isRecommended=i<3&&affordable;
-    var card=document.createElement("div");
-    card.className="player-card"+(isTopPick?" top-pick":isRecommended?" recommended":"");
-    var h="<div class=\"player-header\"><div><span class=\"player-name\">"+(i+1)+". "+p.name+"</span><span class=\"player-pos\">"+p.pos+"</span>";
-    if(!affordable)h+="<span style=\"color:#ff4444;font-size:.8em\"> ❌超预算</span>";
-    if(isTopPick)h+="<span style=\"color:#4caf50;font-size:.8em\"> ⭐推荐</span>";
-    h+="</div><div class=\"player-score\">"+p.score+"分</div></div>";
-    h+="<div style=\"display:flex;justify-content:space-between;margin-bottom:4px\"><span class=\"player-price\">💰"+p.price+"金</span><span style=\"color:#aaa\">能力:"+p.ability+"</span></div>";
-    h+="<div class=\"player-stats\"><div>得分<br><span class=\"val\">"+p.pts+"</span></div><div>篮板<br><span class=\"val\">"+p.reb+"</span></div><div>助攻<br><span class=\"val\">"+p.ast+"</span></div><div>抢断<br><span class=\"val\">"+p.stl+"</span></div><div>盖帽<br><span class=\"val\">"+p.blk+"</span></div></div>";
-    if(affordable)h+="<button onclick=\"selectPlayer(\'"+teamName+"\',\'"+p.name+"\',\'"+p.pos+"\',"+p.price+","+p.ability+")\" style=\"width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;background:#4caf50;color:#fff;font-size:1em;font-weight:bold;cursor:pointer\">✅ 选他</button>";
+    var card=document.createElement('div');
+    card.className='player-card'+(isTopPick?' top-pick':isRecommended?' recommended':'');
+    var h='<div class="player-header"><div><span class="player-name">'+(i+1)+'. '+p.name+'</span><span class="player-pos">'+p.pos+'</span>';
+    if(!affordable)h+='<span style="color:#ff4444;font-size:.8em"> ❌超预算</span>';
+    if(isTopPick)h+='<span style="color:#4caf50;font-size:.8em"> 推荐</span>';
+    h+='</div><div class="player-score">'+p.score+'分</div></div>';
+    h+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="player-price">💰'+p.price+'金</span><span style="color:#aaa">能力:'+p.ability+'</span></div>';
+    h+='<div class="player-stats"><div>得分<br><span class="val">'+p.pts+'</span></div><div>篮板<br><span class="val">'+p.reb+'</span></div><div>助攻<br><span class="val">'+p.ast+'</span></div><div>抢断<br><span class="val">'+p.stl+'</span></div><div>盖帽<br><span class="val">'+p.blk+'</span></div></div>';
+    if(affordable)h+='<button onclick="selectPlayer(\''+teamName+'\',\''+p.name+'\',\''+p.pos+'\','+p.price+','+p.ability+')" style="width:100%;margin-top:6px;padding:8px;border:none;border-radius:6px;background:#4caf50;color:#fff;font-size:1em;font-weight:bold;cursor:pointer">✅ 选他</button>';
     card.innerHTML=h;
     container.appendChild(card);
   }
@@ -114,31 +114,31 @@ function selectPlayer(team,name,pos,price,ability){
   if(price>budget)return;
   selected.push({team:team,name:name,pos:pos,price:price,ability:ability});budget-=price;
   if(POSITIONS.indexOf(pos)>=0)posCount[pos]++;
-  document.getElementById("budget").textContent=budget;document.getElementById("count").textContent=selected.length;
-  updatePosNeeds();renderSelected();document.getElementById("playerResults").innerHTML="";document.getElementById("rerollAdvice").style.display="none";document.getElementById("searchBox").value="";renderTeamList("");
-  if(selected.length>=8)alert("🏆 阵容已满！\n总能力: "+selected.reduce(function(s,p){return s+p.ability},0).toFixed(1));
+  document.getElementById('budget').textContent=budget;document.getElementById('count').textContent=selected.length;
+  updatePosNeeds();renderSelected();document.getElementById('playerResults').innerHTML='';document.getElementById('rerollAdvice').style.display='none';document.getElementById('searchBox').value='';renderTeamList('');
+  if(selected.length>=8)alert('🏆 阵容已满！总能力: '+selected.reduce(function(s,p){return s+p.ability},0).toFixed(1));
 }
 
-function removePlayer(idx){var p=selected[idx];budget+=p.price;if(POSITIONS.indexOf(p.pos)>=0)posCount[p.pos]--;selected.splice(idx,1);document.getElementById("budget").textContent=budget;document.getElementById("count").textContent=selected.length;updatePosNeeds();renderSelected()}
+function removePlayer(idx){var p=selected[idx];budget+=p.price;if(POSITIONS.indexOf(p.pos)>=0)posCount[p.pos]--;selected.splice(idx,1);document.getElementById('budget').textContent=budget;document.getElementById('count').textContent=selected.length;updatePosNeeds();renderSelected()}
 
-function updatePosNeeds(){var h="";for(var i=0;i<POSITIONS.length;i++){var pos=POSITIONS[i];h+="<span class=\"pos-tag "+(posCount[pos]>0?"pos-filled":"pos-need")+"\">"+pos+" "+(posCount[pos]>0?"✓":"✗")+"</span>"}document.getElementById("posNeeds").innerHTML=h}
+function updatePosNeeds(){var h='';for(var i=0;i<POSITIONS.length;i++){var pos=POSITIONS[i];h+='<span class="pos-tag '+(posCount[pos]>0?'pos-filled':'pos-need')+'">'+pos+' '+(posCount[pos]>0?'✓':'✗')+'</span>'}document.getElementById('posNeeds').innerHTML=h}
 
-function renderSelected(){var section=document.getElementById("selectedSection"),list=document.getElementById("selectedList");if(!selected.length){section.style.display="none";return}section.style.display="block";var h="";for(var i=0;i<selected.length;i++){var p=selected[i];h+="<div class=\"selected-player\"><span>"+p.name+"("+p.pos+") "+p.team+" "+p.price+"金 能力"+p.ability+"</span><span class=\"remove\" onclick=\"removePlayer("+i+")\"></span></div>"}h+="<div style=\"text-align:right;color:#ffd700;margin-top:4px\">总能力: "+selected.reduce(function(s,p){return s+p.ability},0).toFixed(1)+"</div>";list.innerHTML=h}
+function renderSelected(){var section=document.getElementById('selectedSection'),list=document.getElementById('selectedList');if(!selected.length){section.style.display='none';return}section.style.display='block';var h='';for(var i=0;i<selected.length;i++){var p=selected[i];h+='<div class="selected-player"><span>'+p.name+'('+p.pos+') '+p.team+' '+p.price+'金 能力'+p.ability+'</span><span class="remove" onclick="removePlayer('+i+')">✕</span></div>'}h+='<div style="text-align:right;color:#ffd700;margin-top:4px">总能力: '+selected.reduce(function(s,p){return s+p.ability},0).toFixed(1)+'</div>';list.innerHTML=h}
 
-function getTierClass(a){if(a>=50)return"tier-splus";if(a>=40)return"tier-s";if(a>=30)return"tier-a";if(a>=22)return"tier-b";return"tier-c"}
+function getTierClass(a){if(a>=50)return'tier-splus';if(a>=40)return'tier-s';if(a>=30)return'tier-a';if(a>=22)return'tier-b';return'tier-c'}
 
-function getRerollAdvice(tier){var a=tier.ability,round=selected.length+1;if(a>=40)return null;if(a<22)return{type:"must",text:"🔄 必刷！该队最强球员仅"+a+"能力"};if(round<=3&&a<30)return{type:"yes",text:" 建议刷掉（前期大胆刷）"};if(round<=5&&a<25)return{type:"yes",text:"🔄 建议刷掉"};if(round>=6)return{type:"no",text:"⚠️ 后期了别刷了，选最好的"};return{type:"no",text:"⚠️ 能力"+a+"，看预算决定"}}
+function getRerollAdvice(tier){var a=tier.ability,rd=selected.length+1;if(a>=40)return null;if(a<22)return{type:'must',text:'🔄 必刷！该队最强球员仅'+a+'能力'};if(rd<=3&&a<30)return{type:'yes',text:'🔄 建议刷掉（前期大胆刷）'};if(rd<=5&&a<25)return{type:'yes',text:'🔄 建议刷掉'};if(rd>=6)return{type:'no',text:'⚠️ 后期了别刷了，选最好的'};return{type:'no',text:'⚠️ 能力'+a+'，看预算决定'}}
 
-function showRerollAdvice(type,text){var el=document.getElementById("rerollAdvice");el.style.display="block";el.className="reroll-advice reroll-"+type;el.textContent=text}
+function showRerollAdvice(type,text){var el=document.getElementById('rerollAdvice');el.style.display='block';el.className='reroll-advice reroll-'+type;el.textContent=text}
 
-function renderTeamList(query){var list=document.getElementById("teamList"),teams=DATA.teams;if(query){teams=teams.filter(function(t){return t.indexOf(query)>=0})}var h="";for(var i=0;i<teams.length;i++){var t=teams[i],tier=DATA.tiers[t];h+="<div class=\"team-item\" onclick=\"selectTeam(\'"+t+"\')\"><span>"+t+"</span><span><span class=\"team-tier "+getTierClass(tier.ability)+"\">"+tier.ability+"</span><span style=\"color:#888;font-size:.8em;margin-left:4px\">"+tier.best+"</span></span></div>"}list.innerHTML=h}
+function renderTeamList(query){var list=document.getElementById('teamList'),teams=DATA.teams;if(query){teams=teams.filter(function(t){return t.indexOf(query)>=0})}var h='';for(var i=0;i<teams.length;i++){var t=teams[i],tier=DATA.tiers[t];h+='<div class="team-item" onclick="selectTeam(\''+t+'\')"><span>'+t+'</span><span><span class="team-tier '+getTierClass(tier.ability)+'">'+tier.ability+'</span><span style="color:#888;font-size:.8em;margin-left:4px">'+tier.best+'</span></span></div>'}list.innerHTML=h}
 
-document.getElementById("searchBox").addEventListener("input",function(e){var q=e.target.value.trim();if(q.length>=1){var exact=DATA.teams.find(function(t){return t===q});if(exact){selectTeam(exact);renderTeamList(q);return}}renderTeamList(q);document.getElementById("playerResults").innerHTML="";document.getElementById("rerollAdvice").style.display="none"});
+document.getElementById('searchBox').addEventListener('input',function(e){var q=e.target.value.trim();if(q.length>=1){var exact=DATA.teams.find(function(t){return t===q});if(exact){selectTeam(exact);renderTeamList(q);return}}renderTeamList(q);document.getElementById('playerResults').innerHTML='';document.getElementById('rerollAdvice').style.display='none'});
 
-function resetAll(){budget=29;selected=[];posCount={PG:0,SG:0,SF:0,PF:0,C:0};document.getElementById("budget").textContent=budget;document.getElementById("count").textContent=0;updatePosNeeds();renderSelected();document.getElementById("playerResults").innerHTML="";document.getElementById("rerollAdvice").style.display="none"}
+function resetAll(){budget=29;selected=[];posCount={PG:0,SG:0,SF:0,PF:0,C:0};document.getElementById('budget').textContent=budget;document.getElementById('count').textContent=0;updatePosNeeds();renderSelected();document.getElementById('playerResults').innerHTML='';document.getElementById('rerollAdvice').style.display='none'}
 
-fetch("data.json").then(function(r){return r.json()}).then(function(d){DATA=d;init()}).catch(loadError);
+fetch('data.json').then(function(r){return r.json()}).then(function(d){DATA=d;init()}).catch(loadError);
 </script>
-<div style="text-align:center;margin-top:10px"><button onclick="resetAll()" style="padding:8px 20px;border:none;border-radius:6px;background:#ff4444;color:#fff;font-size:.9em;cursor:pointer">🔄 重新开始</button></div>
-<div style="text-align:center;color:#666;font-size:.7em;margin-top:10px">数据: <span id="teamCount">?</span>队 | 风格匹配为预估，实战请验证</div>
+<div style='text-align:center;margin-top:10px'><button onclick='resetAll()' style='padding:8px 20px;border:none;border-radius:6px;background:#ff4444;color:#fff;font-size:.9em;cursor:pointer'>🔄 重新开始</button></div>
+<div style='text-align:center;color:#666;font-size:.7em;margin-top:10px'>数据: <span id='teamCount'>?</span>队 | 风格匹配为预估，实战请验证</div>
 </body></html>
