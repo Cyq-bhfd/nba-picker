@@ -90,7 +90,7 @@ function loadChunks(){
   var loaded=0;
   var promises=[];
   for(var i=0;i<CHUNKS;i++){
-    promises.push(fetch('data'+i+'.json').then(function(r){
+    promises.push(fetch('data'+i+'.json?v=2').then(function(r){
       if(!r.ok)throw new Error('HTTP '+r.status);
       return r.json();
     }).then(function(chunk){
@@ -104,7 +104,7 @@ function loadChunks(){
   Promise.all(promises).then(function(){
     DATA.teams.sort();
     init();
-  }).catch(function(e){loadError('加载失败: '+e.message)});
+  }).catch(function(e){var msg=e.message;loadError('数据加载失败('+msg+')。请强制刷新(下拉刷新或清除缓存)后重试')});
 }
 
 function selectStyle(style,btn){currentStyle=style;var btns=document.querySelectorAll('.style-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');btn.classList.add('active');document.getElementById('playerResults').innerHTML='';document.getElementById('rerollAdvice').style.display='none'}
